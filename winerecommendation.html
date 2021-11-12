@@ -1,0 +1,286 @@
+<!-- (A) LOAD QUIZ CSS + JS -->
+<style type="text/css"><!--
+/* (A) WRAPPER */
+#quizWrap {
+  max-width: 600px;
+  margin: 0 auto;
+  /* RECOMMENDED FIXED HEIGHT IF YOU HAVE CONTENT BELOW THE QUIZ */
+  /* SO THAT PAGE LAYOUT DOES NOT "JUMP" */
+  /* height: 250px; */
+}
+
+/* (B) QUESTION */
+#quizQn {
+  padding: 20px;
+  background: #4c93ba;
+  color: #fff;
+  font-size: 24px;
+  border-radius: 10px;
+}
+
+/* (C) ANSWERS */
+#quizAns {
+  margin: 10px 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-gap: 10px;
+}
+#quizAns input[type=radio] { display: none; }
+#quizAns label {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  text-align: center;
+}
+#quizAns label.correct {
+  background: #d8ffc4;
+  border: 1px solid #60a03f;
+}
+#quizAns label.wrong {
+  background: #ffe8e8;
+  border: 1px solid #c78181;
+}
+
+/* (D) BODY... DOES NOT QUITE MATTER */
+html, body {
+  background: #74b6db;
+  font-family: arial, sans-serif;
+}
+--></style>
+<script type="text/javascript">// <![CDATA[
+var sar= new Array();
+var popo=new Array();
+var okok=new Array();
+jQuery.getJSON('/products.json', function(product) {
+ for(var i=0;i<9;i++)
+ {
+   // console.log(product.products[i].tags);
+popo[i]= product.products[i].title;  
+//  console.log(product.products[i].title);
+     sar[i]=product.products[i].tags;
+okok[i]=product.products[i].handle;
+ }
+ 
+
+		   
+} );
+var stringArray = new Array();
+var kkoi=new Array();
+var quiz = {
+  // (A) PROPERTIES
+  // (A1) QUESTIONS & ANSWERS
+  // Q = QUESTION, O = OPTIONS, A = CORRECT ANSWER
+  data: [
+  {
+    q : "WHAT DO YOU DRINK FOR BREAKFAST?",
+    o : [
+      "Coffee",
+      "Milk",
+      "Hot Tea",
+      "Coffee Barley"
+    ],
+    a : 1 // arrays start with 0, so answer is 70 meters
+  },
+  {
+    q : "WHAT DO YOU PREFER TO EAT AT THE END OF THE MEAL?",
+    o : [
+      "Fresh Fruit",
+      "Dessert",
+      "A Selection of Cheeses"
+    ],
+    a : 3
+  },
+  {
+    q : "HOW DO YOU LIKE YOUR COFFEE?",
+    o : [
+      "Bitter",
+      "With Little Sugar",
+      "Very Sweet",
+      "Spicy",
+      "I Don't Like Coffee"
+    ],
+    a : 2
+  },
+  {
+    q : "WHAT FRAGRANCES DO YOU LIKE BEST?",
+    o : [
+      "Floral",
+      "Toasty",
+      "Spicy",
+      "Herbal"
+    ],
+    a : 0
+  },
+  {
+    q : "TELL ME WHAT CHOCOLATE YOU ARE",
+    o : [
+      "White",
+      "Dark",
+      "Milk",
+      "Spiced",
+      "Hazelnut",
+      "Extra Strong Melting Wine"
+    ],
+    a : 3
+  },
+  {
+    q : "HOW MUCH DO YOU SPEND ON AVERAGE FOR A BOTTLE OF WINE?",
+    o : [
+      "From 10$ to 20$",
+      "From 20$ to 40$",
+      "From 40$ to 60$",
+      "Over 60$"
+    ],
+    a : 3
+  },
+  {
+    q : "IF YOU HAD TO CHOOSE 1 DISH, WHICH ONE WOULD YOU CHOOSE?",
+    o : [
+      "Sushi",
+      "Grilled Meat",
+      "Thai Chicken",
+      "Chocalate Cake",
+      "Mixed Cheeses",
+      "Spaghetti With Tomato Sauce"
+    ],
+    a : 3
+  }
+  ],
+
+  // (A2) HTML ELEMENTS
+  hWrap: null, // HTML quiz container
+  hQn: null, // HTML question wrapper
+  hAns: null, // HTML answers wrapper
+
+  // (A3) GAME FLAGS
+  now: 0, // current question
+  score: 0, // current score
+
+  // (B) INIT QUIZ HTML
+  init: function(){
+    // (B1) WRAPPER
+    quiz.hWrap = document.getElementById("quizWrap");
+    //console.log(quiz.hWrap);
+    // (B2) QUESTIONS SECTION
+    quiz.hQn = document.createElement("div");
+    quiz.hQn.id = "quizQn";
+    quiz.hWrap.appendChild(quiz.hQn);
+
+    // (B3) ANSWERS SECTION
+    quiz.hAns = document.createElement("div");
+    quiz.hAns.id = "quizAns";
+    quiz.hWrap.appendChild(quiz.hAns);
+    //console.log(quiz.hAns);
+    // (B4) GO!
+    quiz.draw();
+  },
+
+  // (C) DRAW QUESTION
+  draw: function(){
+    // (C1) QUESTION
+    quiz.hQn.innerHTML = quiz.data[quiz.now].q;
+
+    // (C2) OPTIONS
+    quiz.hAns.innerHTML = "";
+    for (let i in quiz.data[quiz.now].o) {
+      let radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "quiz";
+      radio.id = "quizo" + i;
+      quiz.hAns.appendChild(radio);
+      let label = document.createElement("label");
+      label.innerHTML = quiz.data[quiz.now].o[i];
+      label.setAttribute("for", "quizo" + i);
+      label.dataset.idx = i;
+      label.addEventListener("click", quiz.select);
+      quiz.hAns.appendChild(label);
+    }
+  },
+
+  // (D) OPTION SELECTED
+  
+  select: function(){
+    // (D1) DETACH ALL ONCLICK
+    let all = quiz.hAns.getElementsByTagName("label");
+    for (let label of all) {
+      label.removeEventListener("click", quiz.select);
+    }
+
+    // (D2) CHECK IF CORRECT
+    let correct = this.dataset.idx == quiz.data[quiz.now].a;
+    let asd=quiz.data[quiz.now].o[this.dataset.idx];
+    stringArray[quiz.now]=asd;
+    kkoi[quiz.now]=asd;
+   // quiz.data[quiz.now].o[this.dataset.idx]
+  //  console.log(quiz.data.o.this.dataset.idx);
+   // console.log(this.dataset.idx);
+    if (correct) {
+      quiz.score++;
+      this.classList.add("correct");
+    } else {
+      this.classList.add("wrong");
+    }
+
+    // (D3) NEXT QUESTION OR END GAME
+    quiz.now++;
+    setTimeout(function(){
+      if (quiz.now < quiz.data.length) { quiz.draw(); }
+      else {
+var ll=0;
+		  var kk =["Product Test 8"];
+var liki=["https://winesubscribe12.myshopify.com/products/alsace-pinot-noir-2018-domaine-christian-binner"];
+  //kk[0]=["https://winesubscribe12.myshopify.com/products/alsace-pinot-noir-2018-domaine-christian-binner"];      
+            // ​liki[0]=pro;
+		   for(let i=0;i<9;i++)
+        {
+          //console.log("del");
+            var sd=sar[i];
+ 
+            //console.log(mainstring);
+            //console.log("sdzcxzxc");
+            stringArray.sort();
+            //console.log(stringArray[4]);
+ let strg=stringArray[0];
+            for(let i=1;i<7;i++)
+            {
+                let chk=', '+stringArray[i];
+                strg+=chk;
+            }
+            console.log("popopo7");
+            console.log(stringArray);
+           // console.log(strg);
+//console.log(sd);
+//console.log(sd[0]);
+         if( sd[0]==stringArray[0] && sd[1]==stringArray[1] && sd[2]==stringArray[2] && sd[3]==stringArray[3] && sd[4]==stringArray[4] &&  sd[5]==stringArray[5] && sd[6]==stringArray[6] )
+            {
+              //console.log("delasd");
+               kk[ll]=popo[i];
+        
+     var pro='https://winesubscribe12.myshopify.com/products/'+okok[i];
+               liki[ll]=pro;
+               ll++;
+            }
+ 
+        }
+       quiz.hQn.innerHTML = `Your recommended product is <a href= ${liki[0]}> ${kk[0]} </a>  
+ is filled with wines that have the tags ${kkoi[0]} and  ${kkoi[1]}  and   ${kkoi[2]} and ${kkoi[3]} and ${kkoi[4]} and ${kkoi[5]} and ${kkoi[6]} `;
+        quiz.hAns.innerHTML = "";
+       
+      }
+    }, 10);
+  },
+
+  // (E) RESTART QUIZ
+  reset : function () {
+    quiz.now = 0;
+    quiz.score = 0;
+    quiz.draw();
+  }
+};
+window.addEventListener("load", quiz.init);
+// ]]></script>
+<!-- (B) QUIZ CONTAINER -->
+<div id="quizWrap"></div>
